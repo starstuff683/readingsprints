@@ -1,864 +1,871 @@
-I'll update the app to hide the timer adjustment controls when the timer is running, making the interface cleaner and more focused. They'll only be visible when the timer is stopped or reset.
-Now the timer adjustment controls will be hidden when the timer is running, creating a cleaner and more focused interface. They'll only reappear when you reset the timer or when a timer session completes. This gives you a distraction-free reading experience while the timer is active.
-Try starting the timer to see how the controls elegantly fade away, and then reset it to see them reappear!```html
-        <div class="mb-6 text-center">
-            <div class="timer-display text-gray-800 mb-2" id="timer">00:25:00</div>
-            <div class="w-full bg-gray-200 rounded-full h-2.5 mb-4">
-                <div class="progress-bar h-2.5 rounded-full" id="progress-bar" style="width: 0%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"></div>
-            </div>
-            
-            <!-- Timer Adjustment Controls - Will be hidden when timer is running -->
-            <div class="timer-controls mb-4" id="timer-controls">
-                <div class="flex justify-center items-center space-x-2">
-                    <div class="flex flex-col items-center">
-                        <label class="text-xs text-gray-500">Hours</label>
-                        <div class="flex items-center">
-                            <button class="timer-btn px-2 py-1 bg-gray-100 rounded-l-lg" data-action="decrease" data-unit="hours">-</button>
-                            <input type="number" id="hours-input" class="timer-input h-8 border-y border-gray-200 focus:outline-none" min="0" max="24" value="0">
-                            <button class="timer-btn px-2 py-1 bg-gray-100 rounded-r-lg" data-action="increase" data-unit="hours">+</button>
-                        </div>
-                    </div>
-                    <div class="flex flex-col items-center">
-                        <label class="text-xs text-gray-500">Minutes</label>
-                        <div class="flex items-center">
-                            <button class="timer-btn px-2 py-1 bg-gray-100 rounded-l-lg" data-action="decrease" data-unit="minutes">-</button>
-                            <input type="number" id="minutes-input" class="timer-input h-8 border-y border-gray-200 focus:outline-none" min="0" max="59" value="25">
-                            <button class="timer-btn px-2 py-1 bg-gray-100 rounded-r-lg" data-action="increase" data-unit="minutes">+</button>
-                        </div>
-                    </div>
-                    <div class="flex flex-col items-center">
-                        <label class="text-xs text-gray-500">Seconds</label>
-                        <div class="flex items-center">
-                            <button class="timer-btn px-2 py-1 bg-gray-100 rounded-l-lg" data-action="decrease" data-unit="seconds">-</button>
-                            <input type="number" id="seconds-input" class="timer-input h-8 border-y border-gray-200 focus:outline-none" min="0" max="59" value="0">
-                            <button class="timer-btn px-2 py-1 bg-gray-100 rounded-r-lg" data-action="increase" data-unit="seconds">+</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="flex justify-center space-x-4">
-                <button id="start-btn" class="btn-primary text-white px-6 py-2 rounded-full font-medium">Start</button>
-                <button id="pause-btn" class="btn-secondary text-gray-700 px-6 py-2 rounded-full font-medium hidden">Pause</button>
-                <button id="reset-btn" class="bg-gray-200 text-gray-700 px-6 py-2 rounded-full font-medium">Reset</button>
-            </div>
-        </div>
-        
-        <div class="border-t border-gray-200 pt-6">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-lg font-semibold text-gray-800 flex items-center">
-                    <span class="mr-2">🌿</span> Today's Reading
-                </h2>
-                <div class="flex items-center">
-                    <svg class="book-icon w-5 h-5 text-blue-600 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z"></path>
-                    </svg>
-                    <span id="total-pages" class="font-semibold">0</span>
-                    <span class="text-gray-600 ml-1">pages</span>
-                </div>
-            </div>
-            
-            <div class="flex items-center space-x-3 mb-6">
-                <div class="flex-1">
-                    <label for="page-input" class="block text-sm font-medium text-gray-700 mb-1">Pages read:</label>
-                    <input type="number" id="page-input" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="Enter pages">
-                </div>
-                <button id="add-pages-btn" class="btn-primary text-white px-4 py-2 rounded-lg font-medium mt-5">Add</button>
-            </div>
-            
-            <div class="bg-blue-50 rounded-lg p-4">
-                <h3 class="font-medium text-blue-800 mb-2 flex items-center">
-                    <span class="mr-2">🦋</span> Reading Sessions
-                </h3>
-                <div id="sessions-list" class="space-y-2 max-h-40 overflow-y-auto">
-                    <!-- Sessions will be added here -->
-                    <div class="text-gray-500 text-sm italic">No sessions yet. Start reading!</div>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="card rounded-xl p-6 bg-white/80" id="stats-card">
-        <div class="flex justify-between items-center mb-4">
-            <h2 class="text-lg font-semibold text-gray-800 flex items-center">
-                <span class="mr-2">🌷</span> Reading Stats
-            </h2>
-            
-            <!-- Theme Selector -->
-            <div class="flex space-x-2">
-                <div class="theme-selector active" data-theme="spring" style="background: linear-gradient(135deg, #a8e063 0%, #56ab2f 100%);"></div>
-                <div class="theme-selector" data-theme="lavender" style="background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);"></div>
-                <div class="theme-selector" data-theme="sunset" style="background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);"></div>
-                <div class="theme-selector" data-theme="ocean" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);"></div>
-            </div>
-        </div>
-        
-        <div class="grid grid-cols-2 gap-4">
-            <div class="bg-green-50 rounded-lg p-3 text-center">
-                <div class="text-green-800 text-sm mb-1">Total Time</div>
-                <div id="total-time" class="font-semibold text-lg">0 min</div>
-            </div>
-            <div class="bg-blue-50 rounded-lg p-3 text-center">
-                <div class="text-blue-800 text-sm mb-1">Longest Streak</div>
-                <div id="longest-streak" class="font-semibold text-lg">0 days</div>
-            </div>
-            <div class="bg-indigo-50 rounded-lg p-3 text-center">
-                <div class="text-indigo-800 text-sm mb-1">Sessions</div>
-                <div id="total-sessions" class="font-semibold text-lg">0</div>
-            </div>
-            <div class="bg-pink-50 rounded-lg p-3 text-center">
-                <div class="text-pink-800 text-sm mb-1">Avg. Pages/Session</div>
-                <div id="avg-pages" class="font-semibold text-lg">0</div>
-            </div>
-        </div>
-        
-        <!-- Quick Timer Presets -->
-        <div class="mt-4">
-            <h3 class="text-sm font-medium text-gray-700 mb-2 flex items-center">
-                <span class="mr-2">⏱️</span> Quick Timer Presets
-            </h3>
-            <div class="flex flex-wrap gap-2">
-                <button class="timer-preset px-3 py-1 text-sm rounded-full bg-green-100 text-green-800" data-hours="0" data-minutes="15" data-seconds="0">15 min</button>
-                <button class="timer-preset px-3 py-1 text-sm rounded-full bg-green-100 text-green-800" data-hours="0" data-minutes="25" data-seconds="0">25 min</button>
-                <button class="timer-preset px-3 py-1 text-sm rounded-full bg-green-100 text-green-800" data-hours="0" data-minutes="45" data-seconds="0">45 min</button>
-                <button class="timer-preset px-3 py-1 text-sm rounded-full bg-green-100 text-green-800" data-hours="1" data-minutes="0" data-seconds="0">1 hour</button>
-            </div>
-        </div>
-        
-        <!-- Reset Stats Button -->
-        <div class="mt-6 text-center">
-            <button id="reset-stats-btn" class="px-4 py-2 bg-red-100 text-red-700 rounded-lg text-sm font-medium hover:bg-red-200 transition-colors">
-                Reset All Reading Stats
-            </button>
-        </div>
-    </div>
-</div>
-
-<!-- Page Tracking Modal -->
-<div id="page-tracking-modal" class="modal-overlay">
-    <div class="modal-content bg-white rounded-xl p-6 max-w-sm mx-4">
-        <h3 class="text-xl font-semibold text-gray-800 mb-4">Reading Sprint Complete!</h3>
-        <p class="text-gray-600 mb-6">Great job! Let's track your progress. What page are you on now?</p>
-        
-        <div class="mb-6">
-            <div class="flex items-center justify-between mb-2">
-                <label for="last-page" class="text-sm font-medium text-gray-700">Previous page:</label>
-                <span id="last-page-display" class="font-semibold">0</span>
-            </div>
-            <div class="flex items-center space-x-3">
-                <div class="flex-1">
-                    <label for="current-page" class="block text-sm font-medium text-gray-700 mb-1">Current page:</label>
-                    <input type="number" id="current-page" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="Enter current page">
-                </div>
-            </div>
-        </div>
-        
-        <div class="flex justify-between">
-            <button id="skip-tracking-btn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium">Skip</button>
-            <button id="save-pages-btn" class="btn-primary text-white px-6 py-2 rounded-lg font-medium">Save Progress</button>
-        </div>
-    </div>
-</div>
-
-<!-- Reset Confirmation Modal -->
-<div id="reset-confirm-modal" class="modal-overlay">
-    <div class="modal-content bg-white rounded-xl p-6 max-w-sm mx-4">
-        <h3 class="text-xl font-semibold text-gray-800 mb-4">Reset All Stats?</h3>
-        <p class="text-gray-600 mb-6">This will delete all your reading sessions, streaks, and page counts. This action cannot be undone.</p>
-        
-        <div class="flex justify-between">
-            <button id="cancel-reset-btn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium">Cancel</button>
-            <button id="confirm-reset-btn" class="px-6 py-2 bg-red-500 text-white rounded-lg font-medium">Reset Everything</button>
-        </div>
-    </div>
-</div>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Theme settings
-        const themes = {
-            spring: {
-                background: 'linear-gradient(135deg, #f5ffe5 0%, #e0f5c8 100%)',
-                primaryButton: 'linear-gradient(135deg, #a8e063 0%, #56ab2f 100%)',
-                secondaryButton: 'linear-gradient(135deg, #c1e97e 0%, #8fd46a 100%)',
-                progressBar: 'linear-gradient(135deg, #a8e063 0%, #56ab2f 100%)',
-                cardBg: 'rgba(255, 255, 255, 0.8)',
-                emoji: '🌸'
-            },
-            lavender: {
-                background: 'linear-gradient(135deg, #f3e7ff 0%, #e4d0ff 100%)',
-                primaryButton: 'linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%)',
-                secondaryButton: 'linear-gradient(135deg, #d8c9ff 0%, #b5c6ff 100%)',
-                progressBar: 'linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%)',
-                cardBg: 'rgba(255, 255, 255, 0.8)',
-                emoji: '🔮'
-            },
-            sunset: {
-                background: 'linear-gradient(135deg, #fff5f5 0%, #ffe8e0 100%)',
-                primaryButton: 'linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%)',
-                secondaryButton: 'linear-gradient(135deg, #ffb8bb 0%, #ffdcd7 100%)',
-                progressBar: 'linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%)',
-                cardBg: 'rgba(255, 255, 255, 0.8)',
-                emoji: '🌅'
-            },
-            ocean: {
-                background: 'linear-gradient(135deg, #e3f5ff 0%, #d0f0ff 100%)',
-                primaryButton: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-                secondaryButton: 'linear-gradient(135deg, #7cc2ff 0%, #4df8ff 100%)',
-                progressBar: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-                cardBg: 'rgba(255, 255, 255, 0.8)',
-                emoji: '🌊'
-            }
-        };
-        
-        let currentTheme = 'spring';
-        
-        // Initialize from localStorage
-        let timerDuration = 25 * 60; // 25 minutes in seconds
-        let timeRemaining = timerDuration;
-        let timerInterval = null;
-        let isRunning = false;
-        let sessions = JSON.parse(localStorage.getItem('readingSessions')) || [];
-        let streak = JSON.parse(localStorage.getItem('readingStreak')) || {
-            current: 0,
-            longest: 0,
-            lastDate: null
-        };
-        let totalPages = JSON.parse(localStorage.getItem('totalPages')) || 0;
-        let lastPageNumber = JSON.parse(localStorage.getItem('lastPageNumber')) || 0;
-        
-        // DOM elements
-        const timerDisplay = document.getElementById('timer');
-        const progressBar = document.getElementById('progress-bar');
-        const startBtn = document.getElementById('start-btn');
-        const pauseBtn = document.getElementById('pause-btn');
-        const resetBtn = document.getElementById('reset-btn');
-        const pageInput = document.getElementById('page-input');
-        const addPagesBtn = document.getElementById('add-pages-btn');
-        const sessionsList = document.getElementById('sessions-list');
-        const streakCount = document.getElementById('streak-count');
-        const totalPagesDisplay = document.getElementById('total-pages');
-        const totalTimeDisplay = document.getElementById('total-time');
-        const longestStreakDisplay = document.getElementById('longest-streak');
-        const totalSessionsDisplay = document.getElementById('total-sessions');
-        const avgPagesDisplay = document.getElementById('avg-pages');
-        const hoursInput = document.getElementById('hours-input');
-        const minutesInput = document.getElementById('minutes-input');
-        const secondsInput = document.getElementById('seconds-input');
-        const themeSelectors = document.querySelectorAll('.theme-selector');
-        const timerPresets = document.querySelectorAll('.timer-preset');
-        const timerButtons = document.querySelectorAll('.timer-btn');
-        const resetStatsBtn = document.getElementById('reset-stats-btn');
-        const timerControls = document.getElementById('timer-controls');
-        
-        // Modal elements
-        const pageTrackingModal = document.getElementById('page-tracking-modal');
-        const lastPageDisplay = document.getElementById('last-page-display');
-        const currentPageInput = document.getElementById('current-page');
-        const savePagesBtn = document.getElementById('save-pages-btn');
-        const skipTrackingBtn = document.getElementById('skip-tracking-btn');
-        const resetConfirmModal = document.getElementById('reset-confirm-modal');
-        const cancelResetBtn = document.getElementById('cancel-reset-btn');
-        const confirmResetBtn = document.getElementById('confirm-reset-btn');
-        
-        // Apply saved theme if exists
-        const savedTheme = localStorage.getItem('readingTheme');
-        if (savedTheme && themes[savedTheme]) {
-            currentTheme = savedTheme;
-            applyTheme(currentTheme);
-            
-            // Update active theme selector
-            themeSelectors.forEach(selector => {
-                if (selector.dataset.theme === currentTheme) {
-                    selector.classList.add('active');
-                } else {
-                    selector.classList.remove('active');
-                }
-            });
-        } else {
-            applyTheme('spring');
-        }
-        
-        // Update displays
-        updateDisplays();
-        renderSessions();
-        checkStreak();
-        
-        // Set initial timer values
-        updateTimerInputs();
-        
-        // Timer functions
-        function updateTimer() {
-            const hours = Math.floor(timeRemaining / 3600);
-            const minutes = Math.floor((timeRemaining % 3600) / 60);
-            const seconds = timeRemaining % 60;
-            
-            timerDisplay.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-            
-            // Update progress bar
-            const progress = ((timerDuration - timeRemaining) / timerDuration) * 100;
-            progressBar.style.width = `${progress}%`;
-            
-            if (timeRemaining <= 0) {
-                clearInterval(timerInterval);
-                isRunning = false;
-                timeRemaining = 0;
-                timerComplete();
-                updateButtonState();
-                showTimerControls(); // Show controls when timer completes
-            }
-        }
-        
-        function startTimer() {
-            if (!isRunning) {
-                // If timer is at 0, get values from inputs
-                if (timeRemaining === 0) {
-                    updateTimerDuration();
-                    timeRemaining = timerDuration;
-                }
-                
-                // Don't start if duration is 0
-                if (timerDuration === 0) {
-                    showNotification('Timer Error', 'Please set a timer duration greater than 0.');
-                    return;
-                }
-                
-                isRunning = true;
-                timerInterval = setInterval(() => {
-                    timeRemaining--;
-                    updateTimer();
-                }, 1000);
-                updateButtonState();
-                hideTimerControls(); // Hide controls when timer starts
-            }
-        }
-        
-        function pauseTimer() {
-            if (isRunning) {
-                isRunning = false;
-                clearInterval(timerInterval);
-                updateButtonState();
-                // Don't show controls on pause - only on reset
-            }
-        }
-        
-        function resetTimer() {
-            pauseTimer();
-            updateTimerDuration();
-            timeRemaining = timerDuration;
-            updateTimer();
-            updateTimerInputs();
-            updateButtonState();
-            showTimerControls(); // Show controls when timer is reset
-        }
-        
-        function hideTimerControls() {
-            timerControls.classList.add('hidden');
-        }
-        
-        function showTimerControls() {
-            timerControls.classList.remove('hidden');
-        }
-        
-        function updateTimerDuration() {
-            const hours = parseInt(hoursInput.value) || 0;
-            const minutes = parseInt(minutesInput.value) || 0;
-            const seconds = parseInt(secondsInput.value) || 0;
-            
-            // Validate inputs
-            const validHours = Math.min(Math.max(hours, 0), 24);
-            const validMinutes = Math.min(Math.max(minutes, 0), 59);
-            const validSeconds = Math.min(Math.max(seconds, 0), 59);
-            
-            // Update inputs with valid values
-            hoursInput.value = validHours;
-            minutesInput.value = validMinutes;
-            secondsInput.value = validSeconds;
-            
-            timerDuration = (validHours * 3600) + (validMinutes * 60) + validSeconds;
-        }
-        
-        function updateTimerInputs() {
-            const hours = Math.floor(timerDuration / 3600);
-            const minutes = Math.floor((timerDuration % 3600) / 60);
-            const seconds = timerDuration % 60;
-            
-            hoursInput.value = hours;
-            minutesInput.value = minutes;
-            secondsInput.value = seconds;
-        }
-        
-        function updateButtonState() {
-            if (isRunning) {
-                startBtn.classList.add('hidden');
-                pauseBtn.classList.remove('hidden');
-            } else {
-                startBtn.classList.remove('hidden');
-                pauseBtn.classList.add('hidden');
-            }
-        }
-        
-        function timerComplete() {
-            // Create a new session
-            const newSession = {
-                date: new Date().toISOString(),
-                duration: timerDuration,
-                pages: 0,
-                startPage: lastPageNumber,
-                endPage: lastPageNumber // Will be updated when user enters current page
-            };
-            
-            // Add to sessions array
-            sessions.push(newSession);
-            saveToLocalStorage();
-            
-            // Show page tracking modal
-            showPageTrackingModal();
-        }
-        
-        function showPageTrackingModal() {
-            // Update last page display
-            lastPageDisplay.textContent = lastPageNumber;
-            
-            // Set focus on current page input and pre-fill with a value higher than last page
-            currentPageInput.value = lastPageNumber > 0 ? lastPageNumber + 1 : '';
-            
-            // Show modal
-            pageTrackingModal.classList.add('active');
-            setTimeout(() => {
-                currentPageInput.focus();
-            }, 300);
-        }
-        
-        function hidePageTrackingModal() {
-            pageTrackingModal.classList.remove('active');
-        }
-        
-        function showResetConfirmModal() {
-            resetConfirmModal.classList.add('active');
-        }
-        
-        function hideResetConfirmModal() {
-            resetConfirmModal.classList.remove('active');
-        }
-        
-        function savePageProgress() {
-            const currentPage = parseInt(currentPageInput.value);
-            
-            if (!currentPage || isNaN(currentPage) || currentPage <= 0) {
-                showNotification('Invalid Page Number', 'Please enter a valid page number.');
-                return;
-            }
-            
-            if (currentPage <= lastPageNumber) {
-                showNotification('Page Number Error', 'Current page should be greater than your previous page.');
-                return;
-            }
-            
-            // Calculate pages read
-            const pagesRead = currentPage - lastPageNumber;
-            
-            // Update the latest session
-            if (sessions.length > 0) {
-                const latestSession = sessions[sessions.length - 1];
-                latestSession.pages = pagesRead;
-                latestSession.endPage = currentPage;
-            }
-            
-            // Update total pages and last page number
-            totalPages += pagesRead;
-            lastPageNumber = currentPage;
-            
-            // Update streak
-            updateStreak();
-            
-            // Save to localStorage
-            saveToLocalStorage();
-            
-            // Update displays
-            renderSessions();
-            updateDisplays();
-            
-            // Hide modal
-            hidePageTrackingModal();
-            
-            // Show confirmation
-            showNotification('Progress Saved!', `You read ${pagesRead} pages during this session. Great job!`);
-        }
-        
-        function skipPageTracking() {
-            hidePageTrackingModal();
-            showNotification('Session Recorded', 'Reading session recorded without page tracking.');
-            renderSessions();
-            updateDisplays();
-        }
-        
-        function resetAllStats() {
-            // Reset all data
-            sessions = [];
-            streak = {
-                current: 0,
-                longest: 0,
-                lastDate: null
-            };
-            totalPages = 0;
-            lastPageNumber = 0;
-            
-            // Save to localStorage
-            saveToLocalStorage();
-            
-            // Update displays
-            renderSessions();
-            updateDisplays();
-            
-            // Hide modal
-            hideResetConfirmModal();
-            
-            // Show confirmation
-            showNotification('Stats Reset', 'All reading stats have been reset.');
-        }
-        
-        function showNotification(title, message) {
-            if ('Notification' in window && Notification.permission === 'granted') {
-                new Notification(title, { body: message });
-            } else if ('Notification' in window && Notification.permission !== 'denied') {
-                Notification.requestPermission().then(permission => {
-                    if (permission === 'granted') {
-                        new Notification(title, { body: message });
-                    }
-                });
-            }
-            
-            // Also show an in-app notification
-            const notification = document.createElement('div');
-            notification.className = 'fixed bottom-4 right-4 bg-white rounded-lg shadow-lg p-4 max-w-xs z-50 fade-in';
-            notification.innerHTML = `
-                <h3 class="font-semibold text-gray-800">${title}</h3>
-                <p class="text-gray-600 text-sm">${message}</p>
-            `;
-            document.body.appendChild(notification);
-            
-            setTimeout(() => {
-                notification.classList.add('opacity-0', 'transition-opacity', 'duration-500');
-                setTimeout(() => notification.remove(), 500);
-            }, 5000);
-        }
-        
-        // Session and streak functions
-        function addPages(pages) {
-            if (!pages || isNaN(pages) || pages <= 0) return;
-            
-            // Manual page entry
-            const currentPage = lastPageNumber + parseInt(pages);
-            
-            // Create a new session for manual entry
-            const session = {
-                date: new Date().toISOString(),
-                duration: 0, // Manual entry
-                pages: parseInt(pages),
-                startPage: lastPageNumber,
-                endPage: currentPage
-            };
-            
-            sessions.push(session);
-            totalPages += parseInt(pages);
-            lastPageNumber = currentPage;
-            
-            updateStreak();
-            saveToLocalStorage();
-            renderSessions();
-            updateDisplays();
-            
-            // Show confirmation with theme emoji
-            showNotification(`${pages} pages added!`, `You're now on page ${currentPage}. Keep up the great reading progress!`);
-        }
-        
-        function checkStreak() {
-            const today = new Date().toISOString().split('T')[0];
-            
-            if (streak.lastDate) {
-                const lastDate = new Date(streak.lastDate);
-                const yesterday = new Date();
-                yesterday.setDate(yesterday.getDate() - 1);
-                const yesterdayStr = yesterday.toISOString().split('T')[0];
-                
-                if (streak.lastDate === today) {
-                    // Already logged today, do nothing
-                } else if (streak.lastDate === yesterdayStr) {
-                    // Logged yesterday, continue streak
-                    streak.lastDate = today;
-                    streak.current++;
-                    if (streak.current > streak.longest) {
-                        streak.longest = streak.current;
-                    }
-                } else {
-                    // Streak broken
-                    streak.current = 1;
-                    streak.lastDate = today;
-                }
-            } else {
-                // First time
-                streak.current = 1;
-                streak.lastDate = today;
-            }
-            
-            saveToLocalStorage();
-            updateDisplays();
-        }
-        
-        function updateStreak() {
-            const today = new Date().toISOString().split('T')[0];
-            
-            if (streak.lastDate !== today) {
-                streak.lastDate = today;
-                streak.current++;
-                
-                if (streak.current > streak.longest) {
-                    streak.longest = streak.current;
-                }
-            }
-        }
-        
-        function renderSessions() {
-            sessionsList.innerHTML = '';
-            
-            if (sessions.length === 0) {
-                sessionsList.innerHTML = '<div class="text-gray-500 text-sm italic">No sessions yet. Start reading!</div>';
-                return;
-            }
-            
-            // Show most recent 5 sessions
-            const recentSessions = [...sessions].reverse().slice(0, 5);
-            
-            recentSessions.forEach(session => {
-                const date = new Date(session.date);
-                const formattedDate = date.toLocaleDateString('en-US', { 
-                    month: 'short', 
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                });
-                
-                const hours = Math.floor(session.duration / 3600);
-                const minutes = Math.floor((session.duration % 3600) / 60);
-                let timeText = '';
-                
-                if (hours > 0) {
-                    timeText += `${hours}h `;
-                }
-                if (minutes > 0 || hours === 0) {
-                    timeText += `${minutes}m`;
-                }
-                
-                const sessionEl = document.createElement('div');
-                sessionEl.className = 'flex justify-between items-center text-sm';
-                sessionEl.innerHTML = `
-                    <div class="text-gray-700">${formattedDate}</div>
-                    <div class="flex items-center">
-                        ${session.duration > 0 ? `<span class="text-purple-600 mr-3">${timeText}</span>` : ''}
-                        <span class="text-blue-600">${session.pages} pages</span>
-                    </div>
-                `;
-                sessionsList.appendChild(sessionEl);
-            });
-        }
-        
-        function updateDisplays() {
-            streakCount.textContent = streak.current;
-            totalPagesDisplay.textContent = totalPages;
-            longestStreakDisplay.textContent = `${streak.longest} days`;
-            totalSessionsDisplay.textContent = sessions.length;
-            
-            // Calculate total time
-            let totalSeconds = sessions.reduce((total, session) => total + session.duration, 0);
-            let totalHours = Math.floor(totalSeconds / 3600);
-            let totalMinutes = Math.floor((totalSeconds % 3600) / 60);
-            
-            if (totalHours > 0) {
-                totalTimeDisplay.textContent = `${totalHours}h ${totalMinutes}m`;
-            } else {
-                totalTimeDisplay.textContent = `${totalMinutes}m`;
-            }
-            
-            // Calculate average pages per session
-            const totalSessionPages = sessions.reduce((total, session) => total + session.pages, 0);
-            const avgPages = sessions.length > 0 ? Math.round(totalSessionPages / sessions.length) : 0;
-            avgPagesDisplay.textContent = avgPages;
-        }
-        
-        function saveToLocalStorage() {
-            localStorage.setItem('readingSessions', JSON.stringify(sessions));
-            localStorage.setItem('readingStreak', JSON.stringify(streak));
-            localStorage.setItem('totalPages', JSON.stringify(totalPages));
-            localStorage.setItem('lastPageNumber', JSON.stringify(lastPageNumber));
-            localStorage.setItem('readingTheme', currentTheme);
-        }
-        
-        function applyTheme(theme) {
-            if (!themes[theme]) return;
-            
-            const appBody = document.getElementById('app-body');
-            const mainCard = document.getElementById('main-card');
-            const statsCard = document.getElementById('stats-card');
-            const startButton = document.getElementById('start-btn');
-            const pauseButton = document.getElementById('pause-btn');
-            const progressBarEl = document.getElementById('progress-bar');
-            
-            // Apply theme colors
-            appBody.style.background = themes[theme].background;
-            mainCard.style.backgroundColor = themes[theme].cardBg;
-            statsCard.style.backgroundColor = themes[theme].cardBg;
-            startButton.style.background = themes[theme].primaryButton;
-            pauseButton.style.background = themes[theme].secondaryButton;
-            progressBarEl.style.background = themes[theme].progressBar;
-            
-            // Update theme presets
-            document.querySelectorAll('.timer-preset').forEach(preset => {
-                preset.className = `timer-preset px-3 py-1 text-sm rounded-full bg-opacity-70`;
-                
-                if (theme === 'spring') {
-                    preset.classList.add('bg-green-100', 'text-green-800');
-                } else if (theme === 'lavender') {
-                    preset.classList.add('bg-purple-100', 'text-purple-800');
-                } else if (theme === 'sunset') {
-                    preset.classList.add('bg-red-100', 'text-red-800');
-                } else if (theme === 'ocean') {
-                    preset.classList.add('bg-blue-100', 'text-blue-800');
-                }
-            });
-            
-            // Update add pages button
-            addPagesBtn.style.background = themes[theme].primaryButton;
-            savePagesBtn.style.background = themes[theme].primaryButton;
-            
-            currentTheme = theme;
-            saveToLocalStorage();
-        }
-        
-        // Event listeners
-        startBtn.addEventListener('click', startTimer);
-        pauseBtn.addEventListener('click', pauseTimer);
-        resetBtn.addEventListener('click', resetTimer);
-        
-        addPagesBtn.addEventListener('click', () => {
-            const pages = parseInt(pageInput.value);
-            addPages(pages);
-            pageInput.value = '';
-        });
-        
-        pageInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                const pages = parseInt(pageInput.value);
-                addPages(pages);
-                pageInput.value = '';
-            }
-        });
-        
-        // Timer input event listeners
-        hoursInput.addEventListener('change', () => {
-            const hours = parseInt(hoursInput.value) || 0;
-            hoursInput.value = Math.min(Math.max(hours, 0), 24);
-            updateTimerDuration();
-            timeRemaining = timerDuration;
-            updateTimer();
-        });
-        
-        minutesInput.addEventListener('change', () => {
-            const minutes = parseInt(minutesInput.value) || 0;
-            minutesInput.value = Math.min(Math.max(minutes, 0), 59);
-            updateTimerDuration();
-            timeRemaining = timerDuration;
-            updateTimer();
-        });
-        
-        secondsInput.addEventListener('change', () => {
-            const seconds = parseInt(secondsInput.value) || 0;
-            secondsInput.value = Math.min(Math.max(seconds, 0), 59);
-            updateTimerDuration();
-            timeRemaining = timerDuration;
-            updateTimer();
-        });
-        
-        // Timer buttons (+ and -)
-        timerButtons.forEach(btn => {
-            btn.addEventListener('click', () => {
-                const action = btn.dataset.action;
-                const unit = btn.dataset.unit;
-                const input = document.getElementById(`${unit}-input`);
-                let value = parseInt(input.value) || 0;
-                
-                if (action === 'increase') {
-                    if (unit === 'hours') {
-                        value = Math.min(value + 1, 24);
-                    } else {
-                        value = Math.min(value + 1, 59);
-                    }
-                } else {
-                    value = Math.max(value - 1, 0);
-                }
-                
-                input.value = value;
-                updateTimerDuration();
-                timeRemaining = timerDuration;
-                updateTimer();
-            });
-        });
-        
-        // Theme selectors
-        themeSelectors.forEach(selector => {
-            selector.addEventListener('click', () => {
-                const theme = selector.dataset.theme;
-                
-                // Update active state
-                themeSelectors.forEach(s => s.classList.remove('active'));
-                selector.classList.add('active');
-                
-                applyTheme(theme);
-            });
-        });
-        
-        // Timer presets
-        timerPresets.forEach(preset => {
-            preset.addEventListener('click', () => {
-                const hours = parseInt(preset.dataset.hours) || 0;
-                const minutes = parseInt(preset.dataset.minutes) || 0;
-                const seconds = parseInt(preset.dataset.seconds) || 0;
-                
-                hoursInput.value = hours;
-                minutesInput.value = minutes;
-                secondsInput.value = seconds;
-                
-                updateTimerDuration();
-                timeRemaining = timerDuration;
-                updateTimer();
-                
-                // Show confirmation
-                let timeText = '';
-                if (hours > 0) timeText += `${hours}h `;
-                if (minutes > 0 || (hours === 0 && seconds === 0)) timeText += `${minutes}m `;
-                if (seconds > 0) timeText += `${seconds}s`;
-                
-                showNotification(`Timer set: ${timeText.trim()}`, 'Ready to start your reading sprint!');
-            });
-        });
-        
-        // Page tracking modal buttons
-        savePagesBtn.addEventListener('click', savePageProgress);
-        skipTrackingBtn.addEventListener('click', skipPageTracking);
-        
-        // Reset stats button
-        resetStatsBtn.addEventListener('click', showResetConfirmModal);
-        cancelResetBtn.addEventListener('click', hideResetConfirmModal);
-        confirmResetBtn.addEventListener('click', resetAllStats);
-        
-        // Current page input validation
-        currentPageInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                savePageProgress();
-            }
-        });
-        
-        // Initialize timer display
-        updateTimer();
-    });
-</script>
+<!DOCTYPE html>
+<html lang= “en”>
+<head>
+<meta charset= “UTF-8”>
+<title>Reading Sprint</title>
+<script src=https://cdn.tailwindcss.com></script>
+</head>
+<body class=”bg-gray-100”>
+        <div class="mb-6 text-center"> 
+            <div class="timer-display text-gray-800 mb-2" id="timer">00:25:00</div> 
+            <div class="w-full bg-gray-200 rounded-full h-2.5 mb-4"> 
+                <div class="progress-bar h-2.5 rounded-full" id="progress-bar" style="width: 0%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"></div> 
+            </div> 
+             
+            <!-- Timer Adjustment Controls - Will be hidden when timer is running --> 
+            <div class="timer-controls mb-4" id="timer-controls"> 
+                <div class="flex justify-center items-center space-x-2"> 
+                    <div class="flex flex-col items-center"> 
+                        <label class="text-xs text-gray-500">Hours</label> 
+                        <div class="flex items-center"> 
+                            <button class="timer-btn px-2 py-1 bg-gray-100 rounded-l-lg" data-action="decrease" data-unit="hours">-</button> 
+                            <input type="number" id="hours-input" class="timer-input h-8 border-y border-gray-200 focus:outline-none" min="0" max="24" value="0"> 
+                            <button class="timer-btn px-2 py-1 bg-gray-100 rounded-r-lg" data-action="increase" data-unit="hours">+</button> 
+                        </div> 
+                    </div> 
+                    <div class="flex flex-col items-center"> 
+                        <label class="text-xs text-gray-500">Minutes</label> 
+                        <div class="flex items-center"> 
+                            <button class="timer-btn px-2 py-1 bg-gray-100 rounded-l-lg" data-action="decrease" data-unit="minutes">-</button> 
+                            <input type="number" id="minutes-input" class="timer-input h-8 border-y border-gray-200 focus:outline-none" min="0" max="59" value="25"> 
+                            <button class="timer-btn px-2 py-1 bg-gray-100 rounded-r-lg" data-action="increase" data-unit="minutes">+</button> 
+                        </div> 
+                    </div> 
+                    <div class="flex flex-col items-center"> 
+                        <label class="text-xs text-gray-500">Seconds</label> 
+                        <div class="flex items-center"> 
+                            <button class="timer-btn px-2 py-1 bg-gray-100 rounded-l-lg" data-action="decrease" data-unit="seconds">-</button> 
+                            <input type="number" id="seconds-input" class="timer-input h-8 border-y border-gray-200 focus:outline-none" min="0" max="59" value="0"> 
+                            <button class="timer-btn px-2 py-1 bg-gray-100 rounded-r-lg" data-action="increase" data-unit="seconds">+</button> 
+                        </div> 
+                    </div> 
+                </div> 
+            </div> 
+             
+            <div class="flex justify-center space-x-4"> 
+                <button id="start-btn" class="btn-primary text-white px-6 py-2 rounded-full font-medium">Start</button> 
+                <button id="pause-btn" class="btn-secondary text-gray-700 px-6 py-2 rounded-full font-medium hidden">Pause</button> 
+                <button id="reset-btn" class="bg-gray-200 text-gray-700 px-6 py-2 rounded-full font-medium">Reset</button> 
+            </div> 
+        </div> 
+         
+        <div class="border-t border-gray-200 pt-6"> 
+            <div class="flex justify-between items-center mb-4"> 
+                <h2 class="text-lg font-semibold text-gray-800 flex items-center"> 
+                    <span class="mr-2">🌿</span> Today's Reading 
+                </h2> 
+                <div class="flex items-center"> 
+                    <svg class="book-icon w-5 h-5 text-blue-600 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"> 
+                        <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z"></path> 
+                    </svg> 
+                    <span id="total-pages" class="font-semibold">0</span> 
+                    <span class="text-gray-600 ml-1">pages</span> 
+                </div> 
+            </div> 
+             
+            <div class="flex items-center space-x-3 mb-6"> 
+                <div class="flex-1"> 
+                    <label for="page-input" class="block text-sm font-medium text-gray-700 mb-1">Pages read:</label> 
+                    <input type="number" id="page-input" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="Enter pages"> 
+                </div> 
+                <button id="add-pages-btn" class="btn-primary text-white px-4 py-2 rounded-lg font-medium mt-5">Add</button> 
+            </div> 
+             
+            <div class="bg-blue-50 rounded-lg p-4"> 
+                <h3 class="font-medium text-blue-800 mb-2 flex items-center"> 
+                    <span class="mr-2">🦋</span> Reading Sessions 
+                </h3> 
+                <div id="sessions-list" class="space-y-2 max-h-40 overflow-y-auto"> 
+                    <!-- Sessions will be added here --> 
+                    <div class="text-gray-500 text-sm italic">No sessions yet. Start reading!</div> 
+                </div> 
+            </div> 
+        </div> 
+    </div> 
+     
+    <div class="card rounded-xl p-6 bg-white/80" id="stats-card"> 
+        <div class="flex justify-between items-center mb-4"> 
+            <h2 class="text-lg font-semibold text-gray-800 flex items-center"> 
+                <span class="mr-2">🌷</span> Reading Stats 
+            </h2> 
+             
+            <!-- Theme Selector --> 
+            <div class="flex space-x-2"> 
+                <div class="theme-selector active" data-theme="spring" style="background: linear-gradient(135deg, #a8e063 0%, #56ab2f 100%);"></div> 
+                <div class="theme-selector" data-theme="lavender" style="background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);"></div> 
+                <div class="theme-selector" data-theme="sunset" style="background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);"></div> 
+                <div class="theme-selector" data-theme="ocean" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);"></div> 
+            </div> 
+        </div> 
+         
+        <div class="grid grid-cols-2 gap-4"> 
+            <div class="bg-green-50 rounded-lg p-3 text-center"> 
+                <div class="text-green-800 text-sm mb-1">Total Time</div> 
+                <div id="total-time" class="font-semibold text-lg">0 min</div> 
+            </div> 
+            <div class="bg-blue-50 rounded-lg p-3 text-center"> 
+                <div class="text-blue-800 text-sm mb-1">Longest Streak</div> 
+                <div id="longest-streak" class="font-semibold text-lg">0 days</div> 
+            </div> 
+            <div class="bg-indigo-50 rounded-lg p-3 text-center"> 
+                <div class="text-indigo-800 text-sm mb-1">Sessions</div> 
+                <div id="total-sessions" class="font-semibold text-lg">0</div> 
+            </div> 
+            <div class="bg-pink-50 rounded-lg p-3 text-center"> 
+                <div class="text-pink-800 text-sm mb-1">Avg. Pages/Session</div> 
+                <div id="avg-pages" class="font-semibold text-lg">0</div> 
+            </div> 
+        </div> 
+         
+        <!-- Quick Timer Presets --> 
+        <div class="mt-4"> 
+            <h3 class="text-sm font-medium text-gray-700 mb-2 flex items-center"> 
+                <span class="mr-2">⏱️</span> Quick Timer Presets 
+            </h3> 
+            <div class="flex flex-wrap gap-2"> 
+                <button class="timer-preset px-3 py-1 text-sm rounded-full bg-green-100 text-green-800" data-hours="0" data-minutes="15" data-seconds="0">15 min</button> 
+                <button class="timer-preset px-3 py-1 text-sm rounded-full bg-green-100 text-green-800" data-hours="0" data-minutes="25" data-seconds="0">25 min</button> 
+                <button class="timer-preset px-3 py-1 text-sm rounded-full bg-green-100 text-green-800" data-hours="0" data-minutes="45" data-seconds="0">45 min</button> 
+                <button class="timer-preset px-3 py-1 text-sm rounded-full bg-green-100 text-green-800" data-hours="1" data-minutes="0" data-seconds="0">1 hour</button> 
+            </div> 
+        </div> 
+         
+        <!-- Reset Stats Button --> 
+        <div class="mt-6 text-center"> 
+            <button id="reset-stats-btn" class="px-4 py-2 bg-red-100 text-red-700 rounded-lg text-sm font-medium hover:bg-red-200 transition-colors"> 
+                Reset All Reading Stats 
+            </button> 
+        </div> 
+    </div> 
+</div> 
+ 
+<!-- Page Tracking Modal --> 
+<div id="page-tracking-modal" class="modal-overlay"> 
+    <div class="modal-content bg-white rounded-xl p-6 max-w-sm mx-4"> 
+        <h3 class="text-xl font-semibold text-gray-800 mb-4">Reading Sprint Complete!</h3> 
+        <p class="text-gray-600 mb-6">Great job! Let's track your progress. What page are you on now?</p> 
+         
+        <div class="mb-6"> 
+            <div class="flex items-center justify-between mb-2"> 
+                <label for="last-page" class="text-sm font-medium text-gray-700">Previous page:</label> 
+                <span id="last-page-display" class="font-semibold">0</span> 
+            </div> 
+            <div class="flex items-center space-x-3"> 
+                <div class="flex-1"> 
+                    <label for="current-page" class="block text-sm font-medium text-gray-700 mb-1">Current page:</label> 
+                    <input type="number" id="current-page" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="Enter current page"> 
+                </div> 
+            </div> 
+        </div> 
+         
+        <div class="flex justify-between"> 
+            <button id="skip-tracking-btn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium">Skip</button> 
+            <button id="save-pages-btn" class="btn-primary text-white px-6 py-2 rounded-lg font-medium">Save Progress</button> 
+        </div> 
+    </div> 
+</div> 
+ 
+<!-- Reset Confirmation Modal --> 
+<div id="reset-confirm-modal" class="modal-overlay"> 
+    <div class="modal-content bg-white rounded-xl p-6 max-w-sm mx-4"> 
+        <h3 class="text-xl font-semibold text-gray-800 mb-4">Reset All Stats?</h3> 
+        <p class="text-gray-600 mb-6">This will delete all your reading sessions, streaks, and page counts. This action cannot be undone.</p> 
+         
+        <div class="flex justify-between"> 
+            <button id="cancel-reset-btn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium">Cancel</button> 
+            <button id="confirm-reset-btn" class="px-6 py-2 bg-red-500 text-white rounded-lg font-medium">Reset Everything</button> 
+        </div> 
+    </div> 
+</div> 
+ 
+<script> 
+    document.addEventListener('DOMContentLoaded', function() { 
+        // Theme settings 
+        const themes = { 
+            spring: { 
+                background: 'linear-gradient(135deg, #f5ffe5 0%, #e0f5c8 100%)', 
+                primaryButton: 'linear-gradient(135deg, #a8e063 0%, #56ab2f 100%)', 
+                secondaryButton: 'linear-gradient(135deg, #c1e97e 0%, #8fd46a 100%)', 
+                progressBar: 'linear-gradient(135deg, #a8e063 0%, #56ab2f 100%)', 
+                cardBg: 'rgba(255, 255, 255, 0.8)', 
+                emoji: '🌸' 
+            }, 
+            lavender: { 
+                background: 'linear-gradient(135deg, #f3e7ff 0%, #e4d0ff 100%)', 
+                primaryButton: 'linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%)', 
+                secondaryButton: 'linear-gradient(135deg, #d8c9ff 0%, #b5c6ff 100%)', 
+                progressBar: 'linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%)', 
+                cardBg: 'rgba(255, 255, 255, 0.8)', 
+                emoji: '🔮' 
+            }, 
+            sunset: { 
+                background: 'linear-gradient(135deg, #fff5f5 0%, #ffe8e0 100%)', 
+                primaryButton: 'linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%)', 
+                secondaryButton: 'linear-gradient(135deg, #ffb8bb 0%, #ffdcd7 100%)', 
+                progressBar: 'linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%)', 
+                cardBg: 'rgba(255, 255, 255, 0.8)', 
+                emoji: '🌅' 
+            }, 
+            ocean: { 
+                background: 'linear-gradient(135deg, #e3f5ff 0%, #d0f0ff 100%)', 
+                primaryButton: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', 
+                secondaryButton: 'linear-gradient(135deg, #7cc2ff 0%, #4df8ff 100%)', 
+                progressBar: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', 
+                cardBg: 'rgba(255, 255, 255, 0.8)', 
+                emoji: '🌊' 
+            } 
+        }; 
+         
+        let currentTheme = 'spring'; 
+         
+        // Initialize from localStorage 
+        let timerDuration = 25 * 60; // 25 minutes in seconds 
+        let timeRemaining = timerDuration; 
+        let timerInterval = null; 
+        let isRunning = false; 
+        let sessions = JSON.parse(localStorage.getItem('readingSessions')) || []; 
+        let streak = JSON.parse(localStorage.getItem('readingStreak')) || { 
+            current: 0, 
+            longest: 0, 
+            lastDate: null 
+        }; 
+        let totalPages = JSON.parse(localStorage.getItem('totalPages')) || 0; 
+        let lastPageNumber = JSON.parse(localStorage.getItem('lastPageNumber')) || 0; 
+         
+        // DOM elements 
+        const timerDisplay = document.getElementById('timer'); 
+        const progressBar = document.getElementById('progress-bar'); 
+        const startBtn = document.getElementById('start-btn'); 
+        const pauseBtn = document.getElementById('pause-btn'); 
+        const resetBtn = document.getElementById('reset-btn'); 
+        const pageInput = document.getElementById('page-input'); 
+        const addPagesBtn = document.getElementById('add-pages-btn'); 
+        const sessionsList = document.getElementById('sessions-list'); 
+        const streakCount = document.getElementById('streak-count'); 
+        const totalPagesDisplay = document.getElementById('total-pages'); 
+        const totalTimeDisplay = document.getElementById('total-time'); 
+        const longestStreakDisplay = document.getElementById('longest-streak'); 
+        const totalSessionsDisplay = document.getElementById('total-sessions'); 
+        const avgPagesDisplay = document.getElementById('avg-pages'); 
+        const hoursInput = document.getElementById('hours-input'); 
+        const minutesInput = document.getElementById('minutes-input'); 
+        const secondsInput = document.getElementById('seconds-input'); 
+        const themeSelectors = document.querySelectorAll('.theme-selector'); 
+        const timerPresets = document.querySelectorAll('.timer-preset'); 
+        const timerButtons = document.querySelectorAll('.timer-btn'); 
+        const resetStatsBtn = document.getElementById('reset-stats-btn'); 
+        const timerControls = document.getElementById('timer-controls'); 
+         
+        // Modal elements 
+        const pageTrackingModal = document.getElementById('page-tracking-modal'); 
+        const lastPageDisplay = document.getElementById('last-page-display'); 
+        const currentPageInput = document.getElementById('current-page'); 
+        const savePagesBtn = document.getElementById('save-pages-btn'); 
+        const skipTrackingBtn = document.getElementById('skip-tracking-btn'); 
+        const resetConfirmModal = document.getElementById('reset-confirm-modal'); 
+        const cancelResetBtn = document.getElementById('cancel-reset-btn'); 
+        const confirmResetBtn = document.getElementById('confirm-reset-btn'); 
+         
+        // Apply saved theme if exists 
+        const savedTheme = localStorage.getItem('readingTheme'); 
+        if (savedTheme && themes[savedTheme]) { 
+            currentTheme = savedTheme; 
+            applyTheme(currentTheme); 
+             
+            // Update active theme selector 
+            themeSelectors.forEach(selector => { 
+                if (selector.dataset.theme === currentTheme) { 
+                    selector.classList.add('active'); 
+                } else { 
+                    selector.classList.remove('active'); 
+                } 
+            }); 
+        } else { 
+            applyTheme('spring'); 
+        } 
+         
+        // Update displays 
+        updateDisplays(); 
+        renderSessions(); 
+        checkStreak(); 
+         
+        // Set initial timer values 
+        updateTimerInputs(); 
+         
+        // Timer functions 
+        function updateTimer() { 
+            const hours = Math.floor(timeRemaining / 3600); 
+            const minutes = Math.floor((timeRemaining % 3600) / 60); 
+            const seconds = timeRemaining % 60; 
+             
+            timerDisplay.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`; 
+             
+            // Update progress bar 
+            const progress = ((timerDuration - timeRemaining) / timerDuration) * 100; 
+            progressBar.style.width = `${progress}%`; 
+             
+            if (timeRemaining <= 0) { 
+                clearInterval(timerInterval); 
+                isRunning = false; 
+                timeRemaining = 0; 
+                timerComplete(); 
+                updateButtonState(); 
+                showTimerControls(); // Show controls when timer completes 
+            } 
+        } 
+         
+        function startTimer() { 
+            if (!isRunning) { 
+                // If timer is at 0, get values from inputs 
+                if (timeRemaining === 0) { 
+                    updateTimerDuration(); 
+                    timeRemaining = timerDuration; 
+                } 
+                 
+                // Don't start if duration is 0 
+                if (timerDuration === 0) { 
+                    showNotification('Timer Error', 'Please set a timer duration greater than 0.'); 
+                    return; 
+                } 
+                 
+                isRunning = true; 
+                timerInterval = setInterval(() => { 
+                    timeRemaining--; 
+                    updateTimer(); 
+                }, 1000); 
+                updateButtonState(); 
+                hideTimerControls(); // Hide controls when timer starts 
+            } 
+        } 
+         
+        function pauseTimer() { 
+            if (isRunning) { 
+                isRunning = false; 
+                clearInterval(timerInterval); 
+                updateButtonState(); 
+                // Don't show controls on pause - only on reset 
+            } 
+        } 
+         
+        function resetTimer() { 
+            pauseTimer(); 
+            updateTimerDuration(); 
+            timeRemaining = timerDuration; 
+            updateTimer(); 
+            updateTimerInputs(); 
+            updateButtonState(); 
+            showTimerControls(); // Show controls when timer is reset 
+        } 
+         
+        function hideTimerControls() { 
+            timerControls.classList.add('hidden'); 
+        } 
+         
+        function showTimerControls() { 
+            timerControls.classList.remove('hidden'); 
+        } 
+         
+        function updateTimerDuration() { 
+            const hours = parseInt(hoursInput.value) || 0; 
+            const minutes = parseInt(minutesInput.value) || 0; 
+            const seconds = parseInt(secondsInput.value) || 0; 
+             
+            // Validate inputs 
+            const validHours = Math.min(Math.max(hours, 0), 24); 
+            const validMinutes = Math.min(Math.max(minutes, 0), 59); 
+            const validSeconds = Math.min(Math.max(seconds, 0), 59); 
+             
+            // Update inputs with valid values 
+            hoursInput.value = validHours; 
+            minutesInput.value = validMinutes; 
+            secondsInput.value = validSeconds; 
+             
+            timerDuration = (validHours * 3600) + (validMinutes * 60) + validSeconds; 
+        } 
+         
+        function updateTimerInputs() { 
+            const hours = Math.floor(timerDuration / 3600); 
+            const minutes = Math.floor((timerDuration % 3600) / 60); 
+            const seconds = timerDuration % 60; 
+             
+            hoursInput.value = hours; 
+            minutesInput.value = minutes; 
+            secondsInput.value = seconds; 
+        } 
+         
+        function updateButtonState() { 
+            if (isRunning) { 
+                startBtn.classList.add('hidden'); 
+                pauseBtn.classList.remove('hidden'); 
+            } else { 
+                startBtn.classList.remove('hidden'); 
+                pauseBtn.classList.add('hidden'); 
+            } 
+        } 
+         
+        function timerComplete() { 
+            // Create a new session 
+            const newSession = { 
+                date: new Date().toISOString(), 
+                duration: timerDuration, 
+                pages: 0, 
+                startPage: lastPageNumber, 
+                endPage: lastPageNumber // Will be updated when user enters current page 
+            }; 
+             
+            // Add to sessions array 
+            sessions.push(newSession); 
+            saveToLocalStorage(); 
+             
+            // Show page tracking modal 
+            showPageTrackingModal(); 
+        } 
+         
+        function showPageTrackingModal() { 
+            // Update last page display 
+            lastPageDisplay.textContent = lastPageNumber; 
+             
+            // Set focus on current page input and pre-fill with a value higher than last page 
+            currentPageInput.value = lastPageNumber > 0 ? lastPageNumber + 1 : ''; 
+             
+            // Show modal 
+            pageTrackingModal.classList.add('active'); 
+            setTimeout(() => { 
+                currentPageInput.focus(); 
+            }, 300); 
+        } 
+         
+        function hidePageTrackingModal() { 
+            pageTrackingModal.classList.remove('active'); 
+        } 
+         
+        function showResetConfirmModal() { 
+            resetConfirmModal.classList.add('active'); 
+        } 
+         
+        function hideResetConfirmModal() { 
+            resetConfirmModal.classList.remove('active'); 
+        } 
+         
+        function savePageProgress() { 
+            const currentPage = parseInt(currentPageInput.value); 
+             
+            if (!currentPage || isNaN(currentPage) || currentPage <= 0) { 
+                showNotification('Invalid Page Number', 'Please enter a valid page number.'); 
+                return; 
+            } 
+             
+            if (currentPage <= lastPageNumber) { 
+                showNotification('Page Number Error', 'Current page should be greater than your previous page.'); 
+                return; 
+            } 
+             
+            // Calculate pages read 
+            const pagesRead = currentPage - lastPageNumber; 
+             
+            // Update the latest session 
+            if (sessions.length > 0) { 
+                const latestSession = sessions[sessions.length - 1]; 
+                latestSession.pages = pagesRead; 
+                latestSession.endPage = currentPage; 
+            } 
+             
+            // Update total pages and last page number 
+            totalPages += pagesRead; 
+            lastPageNumber = currentPage; 
+             
+            // Update streak 
+            updateStreak(); 
+             
+            // Save to localStorage 
+            saveToLocalStorage(); 
+             
+            // Update displays 
+            renderSessions(); 
+            updateDisplays(); 
+             
+            // Hide modal 
+            hidePageTrackingModal(); 
+             
+            // Show confirmation 
+            showNotification('Progress Saved!', `You read ${pagesRead} pages during this session. Great job!`); 
+        } 
+         
+        function skipPageTracking() { 
+            hidePageTrackingModal(); 
+            showNotification('Session Recorded', 'Reading session recorded without page tracking.'); 
+            renderSessions(); 
+            updateDisplays(); 
+        } 
+         
+        function resetAllStats() { 
+            // Reset all data 
+            sessions = []; 
+            streak = { 
+                current: 0, 
+                longest: 0, 
+                lastDate: null 
+            }; 
+            totalPages = 0; 
+            lastPageNumber = 0; 
+             
+            // Save to localStorage 
+            saveToLocalStorage(); 
+             
+            // Update displays 
+            renderSessions(); 
+            updateDisplays(); 
+             
+            // Hide modal 
+            hideResetConfirmModal(); 
+             
+            // Show confirmation 
+            showNotification('Stats Reset', 'All reading stats have been reset.'); 
+        } 
+         
+        function showNotification(title, message) { 
+            if ('Notification' in window && Notification.permission === 'granted') { 
+                new Notification(title, { body: message }); 
+            } else if ('Notification' in window && Notification.permission !== 'denied') { 
+                Notification.requestPermission().then(permission => { 
+                    if (permission === 'granted') { 
+                        new Notification(title, { body: message }); 
+                    } 
+                }); 
+            } 
+             
+            // Also show an in-app notification 
+            const notification = document.createElement('div'); 
+            notification.className = 'fixed bottom-4 right-4 bg-white rounded-lg shadow-lg p-4 max-w-xs z-50 fade-in'; 
+            notification.innerHTML = ` 
+                <h3 class="font-semibold text-gray-800">${title}</h3> 
+                <p class="text-gray-600 text-sm">${message}</p> 
+            `; 
+            document.body.appendChild(notification); 
+             
+            setTimeout(() => { 
+                notification.classList.add('opacity-0', 'transition-opacity', 'duration-500'); 
+                setTimeout(() => notification.remove(), 500); 
+            }, 5000); 
+        } 
+         
+        // Session and streak functions 
+        function addPages(pages) { 
+            if (!pages || isNaN(pages) || pages <= 0) return; 
+             
+            // Manual page entry 
+            const currentPage = lastPageNumber + parseInt(pages); 
+             
+            // Create a new session for manual entry 
+            const session = { 
+                date: new Date().toISOString(), 
+                duration: 0, // Manual entry 
+                pages: parseInt(pages), 
+                startPage: lastPageNumber, 
+                endPage: currentPage 
+            }; 
+             
+            sessions.push(session); 
+            totalPages += parseInt(pages); 
+            lastPageNumber = currentPage; 
+             
+            updateStreak(); 
+            saveToLocalStorage(); 
+            renderSessions(); 
+            updateDisplays(); 
+             
+            // Show confirmation with theme emoji 
+            showNotification(`${pages} pages added!`, `You're now on page ${currentPage}. Keep up the great reading progress!`); 
+        } 
+         
+        function checkStreak() { 
+            const today = new Date().toISOString().split('T')[0]; 
+             
+            if (streak.lastDate) { 
+                const lastDate = new Date(streak.lastDate); 
+                const yesterday = new Date(); 
+                yesterday.setDate(yesterday.getDate() - 1); 
+                const yesterdayStr = yesterday.toISOString().split('T')[0]; 
+                 
+                if (streak.lastDate === today) { 
+                    // Already logged today, do nothing 
+                } else if (streak.lastDate === yesterdayStr) { 
+                    // Logged yesterday, continue streak 
+                    streak.lastDate = today; 
+                    streak.current++; 
+                    if (streak.current > streak.longest) { 
+                        streak.longest = streak.current; 
+                    } 
+                } else { 
+                    // Streak broken 
+                    streak.current = 1; 
+                    streak.lastDate = today; 
+                } 
+            } else { 
+                // First time 
+                streak.current = 1; 
+                streak.lastDate = today; 
+            } 
+             
+            saveToLocalStorage(); 
+            updateDisplays(); 
+        } 
+         
+        function updateStreak() { 
+            const today = new Date().toISOString().split('T')[0]; 
+             
+            if (streak.lastDate !== today) { 
+                streak.lastDate = today; 
+                streak.current++; 
+                 
+                if (streak.current > streak.longest) { 
+                    streak.longest = streak.current; 
+                } 
+            } 
+        } 
+         
+        function renderSessions() { 
+            sessionsList.innerHTML = ''; 
+             
+            if (sessions.length === 0) { 
+                sessionsList.innerHTML = '<div class="text-gray-500 text-sm italic">No sessions yet. Start reading!</div>'; 
+                return; 
+            } 
+             
+            // Show most recent 5 sessions 
+            const recentSessions = [...sessions].reverse().slice(0, 5); 
+             
+            recentSessions.forEach(session => { 
+                const date = new Date(session.date); 
+                const formattedDate = date.toLocaleDateString('en-US', {  
+                    month: 'short',  
+                    day: 'numeric', 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                }); 
+                 
+                const hours = Math.floor(session.duration / 3600); 
+                const minutes = Math.floor((session.duration % 3600) / 60); 
+                let timeText = ''; 
+                 
+                if (hours > 0) { 
+                    timeText += `${hours}h `; 
+                } 
+                if (minutes > 0 || hours === 0) { 
+                    timeText += `${minutes}m`; 
+                } 
+                 
+                const sessionEl = document.createElement('div'); 
+                sessionEl.className = 'flex justify-between items-center text-sm'; 
+                sessionEl.innerHTML = ` 
+                    <div class="text-gray-700">${formattedDate}</div> 
+                    <div class="flex items-center"> 
+                        ${session.duration > 0 ? `<span class="text-purple-600 mr-3">${timeText}</span>` : ''} 
+                        <span class="text-blue-600">${session.pages} pages</span> 
+                    </div> 
+                `; 
+                sessionsList.appendChild(sessionEl); 
+            }); 
+        } 
+         
+        function updateDisplays() { 
+            streakCount.textContent = streak.current; 
+            totalPagesDisplay.textContent = totalPages; 
+            longestStreakDisplay.textContent = `${streak.longest} days`; 
+            totalSessionsDisplay.textContent = sessions.length; 
+             
+            // Calculate total time 
+            let totalSeconds = sessions.reduce((total, session) => total + session.duration, 0); 
+            let totalHours = Math.floor(totalSeconds / 3600); 
+            let totalMinutes = Math.floor((totalSeconds % 3600) / 60); 
+             
+            if (totalHours > 0) { 
+                totalTimeDisplay.textContent = `${totalHours}h ${totalMinutes}m`; 
+            } else { 
+                totalTimeDisplay.textContent = `${totalMinutes}m`; 
+            } 
+             
+            // Calculate average pages per session 
+            const totalSessionPages = sessions.reduce((total, session) => total + session.pages, 0); 
+            const avgPages = sessions.length > 0 ? Math.round(totalSessionPages / sessions.length) : 0; 
+            avgPagesDisplay.textContent = avgPages; 
+        } 
+         
+        function saveToLocalStorage() { 
+            localStorage.setItem('readingSessions', JSON.stringify(sessions)); 
+            localStorage.setItem('readingStreak', JSON.stringify(streak)); 
+            localStorage.setItem('totalPages', JSON.stringify(totalPages)); 
+            localStorage.setItem('lastPageNumber', JSON.stringify(lastPageNumber)); 
+            localStorage.setItem('readingTheme', currentTheme); 
+        } 
+         
+        function applyTheme(theme) { 
+            if (!themes[theme]) return; 
+             
+            const appBody = document.getElementById('app-body'); 
+            const mainCard = document.getElementById('main-card'); 
+            const statsCard = document.getElementById('stats-card'); 
+            const startButton = document.getElementById('start-btn'); 
+            const pauseButton = document.getElementById('pause-btn'); 
+            const progressBarEl = document.getElementById('progress-bar'); 
+             
+            // Apply theme colors 
+            appBody.style.background = themes[theme].background; 
+            mainCard.style.backgroundColor = themes[theme].cardBg; 
+            statsCard.style.backgroundColor = themes[theme].cardBg; 
+            startButton.style.background = themes[theme].primaryButton; 
+            pauseButton.style.background = themes[theme].secondaryButton; 
+            progressBarEl.style.background = themes[theme].progressBar; 
+             
+            // Update theme presets 
+            document.querySelectorAll('.timer-preset').forEach(preset => { 
+                preset.className = `timer-preset px-3 py-1 text-sm rounded-full bg-opacity-70`; 
+                 
+                if (theme === 'spring') { 
+                    preset.classList.add('bg-green-100', 'text-green-800'); 
+                } else if (theme === 'lavender') { 
+                    preset.classList.add('bg-purple-100', 'text-purple-800'); 
+                } else if (theme === 'sunset') { 
+                    preset.classList.add('bg-red-100', 'text-red-800'); 
+                } else if (theme === 'ocean') { 
+                    preset.classList.add('bg-blue-100', 'text-blue-800'); 
+                } 
+            }); 
+             
+            // Update add pages button 
+            addPagesBtn.style.background = themes[theme].primaryButton; 
+            savePagesBtn.style.background = themes[theme].primaryButton; 
+             
+            currentTheme = theme; 
+            saveToLocalStorage(); 
+        } 
+         
+        // Event listeners 
+        startBtn.addEventListener('click', startTimer); 
+        pauseBtn.addEventListener('click', pauseTimer); 
+        resetBtn.addEventListener('click', resetTimer); 
+         
+        addPagesBtn.addEventListener('click', () => { 
+            const pages = parseInt(pageInput.value); 
+            addPages(pages); 
+            pageInput.value = ''; 
+        }); 
+         
+        pageInput.addEventListener('keypress', (e) => { 
+            if (e.key === 'Enter') { 
+                const pages = parseInt(pageInput.value); 
+                addPages(pages); 
+                pageInput.value = ''; 
+            } 
+        }); 
+         
+        // Timer input event listeners 
+        hoursInput.addEventListener('change', () => { 
+            const hours = parseInt(hoursInput.value) || 0; 
+            hoursInput.value = Math.min(Math.max(hours, 0), 24); 
+            updateTimerDuration(); 
+            timeRemaining = timerDuration; 
+            updateTimer(); 
+        }); 
+         
+        minutesInput.addEventListener('change', () => { 
+            const minutes = parseInt(minutesInput.value) || 0; 
+            minutesInput.value = Math.min(Math.max(minutes, 0), 59); 
+            updateTimerDuration(); 
+            timeRemaining = timerDuration; 
+            updateTimer(); 
+        }); 
+         
+        secondsInput.addEventListener('change', () => { 
+            const seconds = parseInt(secondsInput.value) || 0; 
+            secondsInput.value = Math.min(Math.max(seconds, 0), 59); 
+            updateTimerDuration(); 
+            timeRemaining = timerDuration; 
+            updateTimer(); 
+        }); 
+         
+        // Timer buttons (+ and -) 
+        timerButtons.forEach(btn => { 
+            btn.addEventListener('click', () => { 
+                const action = btn.dataset.action; 
+                const unit = btn.dataset.unit; 
+                const input = document.getElementById(`${unit}-input`); 
+                let value = parseInt(input.value) || 0; 
+                 
+                if (action === 'increase') { 
+                    if (unit === 'hours') { 
+                        value = Math.min(value + 1, 24); 
+                    } else { 
+                        value = Math.min(value + 1, 59); 
+                    } 
+                } else { 
+                    value = Math.max(value - 1, 0); 
+                } 
+                 
+                input.value = value; 
+                updateTimerDuration(); 
+                timeRemaining = timerDuration; 
+                updateTimer(); 
+            }); 
+        }); 
+         
+        // Theme selectors 
+        themeSelectors.forEach(selector => { 
+            selector.addEventListener('click', () => { 
+                const theme = selector.dataset.theme; 
+                 
+                // Update active state 
+                themeSelectors.forEach(s => s.classList.remove('active')); 
+                selector.classList.add('active'); 
+                 
+                applyTheme(theme); 
+            }); 
+        }); 
+         
+        // Timer presets 
+        timerPresets.forEach(preset => { 
+            preset.addEventListener('click', () => { 
+                const hours = parseInt(preset.dataset.hours) || 0; 
+                const minutes = parseInt(preset.dataset.minutes) || 0; 
+                const seconds = parseInt(preset.dataset.seconds) || 0; 
+                 
+                hoursInput.value = hours; 
+                minutesInput.value = minutes; 
+                secondsInput.value = seconds; 
+                 
+                updateTimerDuration(); 
+                timeRemaining = timerDuration; 
+                updateTimer(); 
+                 
+                // Show confirmation 
+                let timeText = ''; 
+                if (hours > 0) timeText += `${hours}h `; 
+                if (minutes > 0 || (hours === 0 && seconds === 0)) timeText += `${minutes}m `; 
+                if (seconds > 0) timeText += `${seconds}s`; 
+                 
+                showNotification(`Timer set: ${timeText.trim()}`, 'Ready to start your reading sprint!'); 
+            }); 
+        }); 
+         
+        // Page tracking modal buttons 
+        savePagesBtn.addEventListener('click', savePageProgress); 
+        skipTrackingBtn.addEventListener('click', skipPageTracking); 
+         
+        // Reset stats button 
+        resetStatsBtn.addEventListener('click', showResetConfirmModal); 
+        cancelResetBtn.addEventListener('click', hideResetConfirmModal); 
+        confirmResetBtn.addEventListener('click', resetAllStats); 
+         
+        // Current page input validation 
+        currentPageInput.addEventListener('keypress', (e) => { 
+            if (e.key === 'Enter') { 
+                savePageProgress(); 
+            } 
+        }); 
+         
+        // Initialize timer display 
+        updateTimer(); 
+    }); 
+</script> 
+</body>
+</html>
